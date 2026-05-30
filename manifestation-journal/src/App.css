@@ -1,0 +1,33 @@
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #f0efeb;
+  color: #264653;
+  font-family: system-ui, sans-serif;
+}
+
+.hero-card {
+  max-width: 680px;
+  padding: 3rem;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 20px 60px rgba(38, 70, 83, 0.18);
+}
+
+.eyebrow {
+  color: #e76f51;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  font-size: 3rem;
+  margin: 0.5rem 0 1rem;
+}
+
+p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
