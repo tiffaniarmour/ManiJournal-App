@@ -4,41 +4,43 @@ import DashboardCard from '../components/DashboardCard'
 
 function Dashboard() {
   return (
-    <div>
+    <div className="app-layout">
       <Sidebar />
 
       <main>
         <Header />
 
-        <DashboardCard
-          title="Today's Focus"
-          value="Abundance & Alignment"
-        />
+        <div className="dashboard-grid">
+          <DashboardCard
+            title="Today's Focus"
+            value="Abundance & Alignment"
+          />
 
-        <DashboardCard
-          title="Journal"
-          value="127 Entries"
-        />
+          <DashboardCard
+            title="Journal"
+            value="127 Entries"
+          />
 
-        <DashboardCard
-          title="Goals"
-          value="5 Active"
-        />
+          <DashboardCard
+            title="Goals"
+            value="5 Active"
+          />
 
-        <DashboardCard
-          title="Manifestations"
-          value="8 In Progress"
-        />
+          <DashboardCard
+            title="Manifestations"
+            value="8 In Progress"
+          />
 
-        <DashboardCard
-          title="Wins"
-          value="23 This Month"
-        />
+          <DashboardCard
+            title="Wins"
+            value="23 This Month"
+          />
 
-        <DashboardCard
-          title="Affirmations"
-          value="84 Saved"
-        />
+          <DashboardCard
+            title="Affirmations"
+            value="84 Saved"
+          />
+        </div>
       </main>
     </div>
   )
