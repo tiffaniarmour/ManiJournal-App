@@ -1,8 +1,17 @@
+import { Outlet } from 'react-router-dom'
 import './App.css'
-import Dashboard from './pages/Dashboard'
+import Sidebar from './components/Sidebar'
 
 function App() {
-  return <Dashboard />
+  return (
+    <div className="app-layout">
+      <Sidebar />
+
+      <main>
+        <Outlet />
+      </main>
+    </div>
+  )
 }
 
 export default App
