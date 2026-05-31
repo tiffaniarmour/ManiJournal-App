@@ -19,6 +19,11 @@ function JournalForm() {
     setContent('')
   }
 
+  function handleDelete(id) {
+    const updatedEntries = entries.filter((entry) => entry.id !== id)
+    setEntries(updatedEntries)
+  }
+
   return (
     <section>
       <h2>New Journal Entry</h2>
@@ -54,6 +59,10 @@ function JournalForm() {
           <article key={entry.id}>
             <h3>{entry.title}</h3>
             <p>{entry.content}</p>
+
+            <button type="button" onClick={() => handleDelete(entry.id)}>
+              Delete
+            </button>
           </article>
         ))}
       </section>
