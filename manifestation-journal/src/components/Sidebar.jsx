@@ -1,16 +1,18 @@
+import { NavLink } from 'react-router-dom'
+
 function Sidebar() {
   return (
     <aside>
       <nav>
         <ul>
-          <li>Dashboard</li>
-          <li>Journal</li>
-          <li>Affirmations</li>
-          <li>Goals</li>
-          <li>Manifestations</li>
-          <li>Wins</li>
-          <li>Future Self</li>
-          <li>Vision Board</li>
+          <li><NavLink to="/">Dashboard</NavLink></li>
+          <li><NavLink to="/journal">Journal</NavLink></li>
+          <li><NavLink to="/affirmations">Affirmations</NavLink></li>
+          <li><NavLink to="/goals">Goals</NavLink></li>
+          <li><NavLink to="/manifestations">Manifestations</NavLink></li>
+          <li><NavLink to="/wins">Wins</NavLink></li>
+          <li><NavLink to="/future-self">Future Self</NavLink></li>
+          <li><NavLink to="/vision-board">Vision Board</NavLink></li>
         </ul>
       </nav>
     </aside>
