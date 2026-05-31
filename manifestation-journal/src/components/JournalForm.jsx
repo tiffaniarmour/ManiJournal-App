@@ -6,23 +6,52 @@ function JournalForm() {
   const [mood, setMood] = useState('')
   const [energy, setEnergy] = useState('5')
   const [entries, setEntries] = useState([])
+  const [editingId, setEditingId] = useState(null)
 
   function handleSubmit(event) {
     event.preventDefault()
 
-    const newEntry = {
-      id: Date.now(),
-      title: title,
-      content: content,
-      mood: mood,
-      energy: energy,
+    if (editingId) {
+      const updatedEntries = entries.map((entry) => {
+        if (entry.id === editingId) {
+          return {
+            ...entry,
+            title: title,
+            content: content,
+            mood: mood,
+            energy: energy,
+          }
+        }
+
+        return entry
+      })
+
+      setEntries(updatedEntries)
+      setEditingId(null)
+    } else {
+      const newEntry = {
+        id: Date.now(),
+        title: title,
+        content: content,
+        mood: mood,
+        energy: energy,
+      }
+
+      setEntries([newEntry, ...entries])
     }
 
-    setEntries([newEntry, ...entries])
     setTitle('')
     setContent('')
     setMood('')
     setEnergy('5')
+  }
+
+  function handleEdit(entry) {
+    setEditingId(entry.id)
+    setTitle(entry.title)
+    setContent(entry.content)
+    setMood(entry.mood)
+    setEnergy(entry.energy)
   }
 
   function handleDelete(id) {
@@ -32,7 +61,7 @@ function JournalForm() {
 
   return (
     <section>
-      <h2>New Journal Entry</h2>
+      <h2>{editingId ? 'Edit Journal Entry' : 'New Journal Entry'}</h2>
 
       <form onSubmit={handleSubmit}>
         <div>
@@ -83,7 +112,9 @@ function JournalForm() {
           />
         </div>
 
-        <button type="submit">Save Entry</button>
+        <button type="submit">
+          {editingId ? 'Update Entry' : 'Save Entry'}
+        </button>
       </form>
 
       <section>
@@ -95,6 +126,10 @@ function JournalForm() {
             <p>{entry.content}</p>
             <p>Mood: {entry.mood}</p>
             <p>Energy: {entry.energy}/10</p>
+
+            <button type="button" onClick={() => handleEdit(entry)}>
+              Edit
+            </button>
 
             <button type="button" onClick={() => handleDelete(entry.id)}>
               Delete
