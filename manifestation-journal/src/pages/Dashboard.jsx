@@ -1,7 +1,7 @@
 import Header from '../components/Header'
 import Sidebar from '../components/Sidebar'
 import DashboardCard from '../components/DashboardCard'
-
+import JournalForm from '../components/JournalForm'
 function Dashboard() {
   return (
     <div className="app-layout">
@@ -39,7 +39,9 @@ function Dashboard() {
           <DashboardCard
             title="Affirmations"
             value="84 Saved"
+
           />
+          <JournalForm />
         </div>
       </main>
     </div>
