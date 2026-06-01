@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '../services/supabase'
 
 function JournalForm() {
   const [title, setTitle] = useState('')
@@ -8,55 +9,87 @@ function JournalForm() {
   const [entries, setEntries] = useState([])
   const [editingId, setEditingId] = useState(null)
 
-  function handleSubmit(event) {
+  useEffect(() => {
+    loadEntries()
+  }, [])
+
+  async function loadEntries() {
+    const { data, error } = await supabase
+      .from('journal_entries')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.log('Load error:', error)
+      return
+    }
+
+    setEntries(data)
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault()
 
     if (editingId) {
-      const updatedEntries = entries.map((entry) => {
-        if (entry.id === editingId) {
-          return {
-            ...entry,
-            title: title,
-            content: content,
-            mood: mood,
-            energy: energy,
-          }
-        }
+      const { error } = await supabase
+        .from('journal_entries')
+        .update({
+          title,
+          entry: content,
+          mood,
+          energy: Number(energy),
+        })
+        .eq('id', editingId)
 
-        return entry
-      })
-
-      setEntries(updatedEntries)
-      setEditingId(null)
-    } else {
-      const newEntry = {
-        id: Date.now(),
-        title: title,
-        content: content,
-        mood: mood,
-        energy: energy,
+      if (error) {
+        console.log('Update error:', error)
+        return
       }
 
-      setEntries([newEntry, ...entries])
+      setEditingId(null)
+    } else {
+      const { error } = await supabase
+        .from('journal_entries')
+        .insert({
+          title,
+          entry: content,
+          mood,
+          energy: Number(energy),
+        })
+
+      if (error) {
+        console.log('Save error:', error)
+        return
+      }
     }
 
     setTitle('')
     setContent('')
     setMood('')
     setEnergy('5')
+    loadEntries()
   }
 
   function handleEdit(entry) {
     setEditingId(entry.id)
     setTitle(entry.title)
-    setContent(entry.content)
+    setContent(entry.entry)
     setMood(entry.mood)
-    setEnergy(entry.energy)
+    setEnergy(String(entry.energy))
   }
 
-  function handleDelete(id) {
-    const updatedEntries = entries.filter((entry) => entry.id !== id)
-    setEntries(updatedEntries)
+  async function handleDelete(id) {
+    const { error } = await supabase
+      .from('journal_entries')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.log('Delete error:', error)
+      return
+    }
+
+    loadEntries()
   }
 
   return (
@@ -120,10 +153,12 @@ function JournalForm() {
       <section>
         <h2>Journal Entries</h2>
 
+        {entries.length === 0 && <p>No journal entries yet.</p>}
+
         {entries.map((entry) => (
           <article key={entry.id}>
             <h3>{entry.title}</h3>
-            <p>{entry.content}</p>
+            <p>{entry.entry}</p>
             <p>Mood: {entry.mood}</p>
             <p>Energy: {entry.energy}/10</p>
 
