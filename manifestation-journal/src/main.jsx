@@ -13,7 +13,7 @@ import Manifestations from './pages/Manifestations'
 import Wins from './pages/Wins'
 import FutureSelf from './pages/FutureSelf'
 import VisionBoard from './pages/VisionBoard'
-
+import TestSupabase from './pages/TestSupabase'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -27,6 +27,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="wins" element={<Wins />} />
           <Route path="future-self" element={<FutureSelf />} />
           <Route path="vision-board" element={<VisionBoard />} />
+          <Route path="/test" element={<TestSupabase />} />
         </Route>
       </Routes>
     </BrowserRouter>
