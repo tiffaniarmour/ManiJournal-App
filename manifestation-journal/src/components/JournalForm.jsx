@@ -121,9 +121,7 @@ function JournalForm() {
     .filter((entry) =>
       entry.title.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .filter((entry) =>
-      moodFilter ? entry.mood === moodFilter : true
-    )
+    .filter((entry) => (moodFilter ? entry.mood === moodFilter : true))
     .sort((a, b) => {
       if (sortOrder === 'oldest') {
         return new Date(a.created_at) - new Date(b.created_at)
@@ -137,10 +135,19 @@ function JournalForm() {
   }
 
   return (
-    <section>
-      <h2>{editingId ? 'Edit Journal Entry' : 'New Journal Entry'}</h2>
+    <section className="journal-page">
+      <div className="page-kicker">📖 Reflection Space</div>
+      <h1>Journal</h1>
+      <p className="page-intro">
+        Capture what is moving through you, track your energy, and notice the patterns that support your manifestation practice.
+      </p>
 
-      <form onSubmit={handleSubmit}>
+      <form className="feature-form" onSubmit={handleSubmit}>
+        <div className="form-header">
+          <h2>{editingId ? 'Edit Journal Entry' : 'New Journal Entry'}</h2>
+          <span className="form-sparkle">✦</span>
+        </div>
+
         <div>
           <label htmlFor="journal-title">Title</label>
           <input
@@ -161,32 +168,34 @@ function JournalForm() {
           ></textarea>
         </div>
 
-        <div>
-          <label htmlFor="journal-mood">Mood</label>
-          <select
-            id="journal-mood"
-            value={mood}
-            onChange={(event) => setMood(event.target.value)}
-          >
-            <option value="">Choose mood</option>
-            <option value="Hopeful">Hopeful</option>
-            <option value="Grounded">Grounded</option>
-            <option value="Grateful">Grateful</option>
-            <option value="Anxious">Anxious</option>
-            <option value="Tired">Tired</option>
-          </select>
-        </div>
+        <div className="form-row">
+          <div>
+            <label htmlFor="journal-mood">Mood</label>
+            <select
+              id="journal-mood"
+              value={mood}
+              onChange={(event) => setMood(event.target.value)}
+            >
+              <option value="">Choose mood</option>
+              <option value="Hopeful">Hopeful</option>
+              <option value="Grounded">Grounded</option>
+              <option value="Grateful">Grateful</option>
+              <option value="Anxious">Anxious</option>
+              <option value="Tired">Tired</option>
+            </select>
+          </div>
 
-        <div>
-          <label htmlFor="journal-energy">Energy</label>
-          <input
-            id="journal-energy"
-            type="number"
-            min="1"
-            max="10"
-            value={energy}
-            onChange={(event) => setEnergy(event.target.value)}
-          />
+          <div>
+            <label htmlFor="journal-energy">Energy</label>
+            <input
+              id="journal-energy"
+              type="number"
+              min="1"
+              max="10"
+              value={energy}
+              onChange={(event) => setEnergy(event.target.value)}
+            />
+          </div>
         </div>
 
         <button type="submit">
@@ -194,65 +203,83 @@ function JournalForm() {
         </button>
       </form>
 
-      <section>
-        <h2>Journal Entries</h2>
-
-        <div>
-          <label htmlFor="journal-search">Search by title</label>
-          <input
-            id="journal-search"
-            type="text"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
+      <section className="entries-section">
+        <div className="section-heading">
+          <div>
+            <div className="page-kicker">✨ Your Pattern Archive</div>
+            <h2>Journal Entries</h2>
+          </div>
+          <span className="entry-count">{filteredEntries.length} shown</span>
         </div>
 
-        <div>
-          <label htmlFor="mood-filter">Filter by mood</label>
-          <select
-            id="mood-filter"
-            value={moodFilter}
-            onChange={(event) => setMoodFilter(event.target.value)}
-          >
-            <option value="">All moods</option>
-            <option value="Hopeful">Hopeful</option>
-            <option value="Grounded">Grounded</option>
-            <option value="Grateful">Grateful</option>
-            <option value="Anxious">Anxious</option>
-            <option value="Tired">Tired</option>
-          </select>
-        </div>
+        <div className="filter-card">
+          <div>
+            <label htmlFor="journal-search">Search by title</label>
+            <input
+              id="journal-search"
+              type="text"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
 
-        <div>
-          <label htmlFor="sort-order">Sort by date</label>
-          <select
-            id="sort-order"
-            value={sortOrder}
-            onChange={(event) => setSortOrder(event.target.value)}
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
+          <div>
+            <label htmlFor="mood-filter">Filter by mood</label>
+            <select
+              id="mood-filter"
+              value={moodFilter}
+              onChange={(event) => setMoodFilter(event.target.value)}
+            >
+              <option value="">All moods</option>
+              <option value="Hopeful">Hopeful</option>
+              <option value="Grounded">Grounded</option>
+              <option value="Grateful">Grateful</option>
+              <option value="Anxious">Anxious</option>
+              <option value="Tired">Tired</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="sort-order">Sort by date</label>
+            <select
+              id="sort-order"
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value)}
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </div>
         </div>
 
         {filteredEntries.length === 0 && <p>No matching journal entries.</p>}
 
-        {filteredEntries.map((entry) => (
-          <article key={entry.id}>
-            <h3>{entry.title}</h3>
-            <p>{entry.entry}</p>
-            <p>Mood: {entry.mood}</p>
-            <p>Energy: {entry.energy}/10</p>
+        <div className="entry-grid">
+          {filteredEntries.map((entry) => (
+            <article className="journal-entry-card" key={entry.id}>
+              <div className="entry-card-top">
+                <h3>{entry.title}</h3>
+                <span className="mood-badge">{entry.mood || 'No mood'}</span>
+              </div>
 
-            <button type="button" onClick={() => handleEdit(entry)}>
-              Edit
-            </button>
+              <p>{entry.entry}</p>
 
-            <button type="button" onClick={() => handleDelete(entry.id)}>
-              Delete
-            </button>
-          </article>
-        ))}
+              <div className="entry-meta">
+                <span>⚡ Energy {entry.energy}/10</span>
+              </div>
+
+              <div className="entry-actions">
+                <button type="button" onClick={() => handleEdit(entry)}>
+                  Edit
+                </button>
+
+                <button type="button" onClick={() => handleDelete(entry.id)}>
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
     </section>
   )
