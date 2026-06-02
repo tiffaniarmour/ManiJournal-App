@@ -10,6 +10,10 @@ function JournalForm() {
   const [entries, setEntries] = useState([])
   const [editingId, setEditingId] = useState(null)
 
+  const [searchTerm, setSearchTerm] = useState('')
+  const [moodFilter, setMoodFilter] = useState('')
+  const [sortOrder, setSortOrder] = useState('newest')
+
   useEffect(() => {
     async function getUser() {
       const { data } = await supabase.auth.getUser()
@@ -113,6 +117,21 @@ function JournalForm() {
     loadEntries(user.id)
   }
 
+  const filteredEntries = entries
+    .filter((entry) =>
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .filter((entry) =>
+      moodFilter ? entry.mood === moodFilter : true
+    )
+    .sort((a, b) => {
+      if (sortOrder === 'oldest') {
+        return new Date(a.created_at) - new Date(b.created_at)
+      }
+
+      return new Date(b.created_at) - new Date(a.created_at)
+    })
+
   if (!user) {
     return <p>Please log in to use your journal.</p>
   }
@@ -178,9 +197,47 @@ function JournalForm() {
       <section>
         <h2>Journal Entries</h2>
 
-        {entries.length === 0 && <p>No journal entries yet.</p>}
+        <div>
+          <label htmlFor="journal-search">Search by title</label>
+          <input
+            id="journal-search"
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
 
-        {entries.map((entry) => (
+        <div>
+          <label htmlFor="mood-filter">Filter by mood</label>
+          <select
+            id="mood-filter"
+            value={moodFilter}
+            onChange={(event) => setMoodFilter(event.target.value)}
+          >
+            <option value="">All moods</option>
+            <option value="Hopeful">Hopeful</option>
+            <option value="Grounded">Grounded</option>
+            <option value="Grateful">Grateful</option>
+            <option value="Anxious">Anxious</option>
+            <option value="Tired">Tired</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="sort-order">Sort by date</label>
+          <select
+            id="sort-order"
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+
+        {filteredEntries.length === 0 && <p>No matching journal entries.</p>}
+
+        {filteredEntries.map((entry) => (
           <article key={entry.id}>
             <h3>{entry.title}</h3>
             <p>{entry.entry}</p>
