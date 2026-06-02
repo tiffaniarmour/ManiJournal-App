@@ -418,6 +418,52 @@ hr {
   justify-content: flex-start;
 }
 
+/* =========================
+   Vision Board
+========================= */
+
+.vision-board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.vision-card {
+  padding: 0;
+  overflow: hidden;
+  border-left: none;
+  border-top: 8px solid var(--blue);
+}
+
+.vision-card::before {
+  display: none;
+}
+
+.vision-card img {
+  display: block;
+  width: 100%;
+  height: 260px;
+  max-height: 260px;
+  object-fit: cover;
+  background: var(--blue-soft);
+}
+
+.vision-card-body {
+  padding: 22px;
+}
+
+.vision-card-body h3 {
+  margin-bottom: 12px;
+}
+
+.vision-card .entry-card-top {
+  align-items: flex-start;
+}
+
+.vision-card .entry-actions {
+  margin-top: 16px;
+}
+
 @media (max-width: 850px) {
   .app-layout {
     grid-template-columns: 1fr;
@@ -441,5 +487,9 @@ hr {
   .entry-card-top {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .vision-board-grid {
+    grid-template-columns: 1fr;
   }
 }

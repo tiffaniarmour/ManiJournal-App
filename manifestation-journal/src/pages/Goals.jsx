@@ -2,96 +2,109 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../services/supabase'
 
 function Goals() {
-  const [user, setUser] = useState(null)
   const [goals, setGoals] = useState([])
-
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('')
-  const [targetDate, setTargetDate] = useState('')
-  const [status, setStatus] = useState('In Progress')
-  const [progress, setProgress] = useState(0)
-  const [whyItMatters, setWhyItMatters] = useState('')
-
+  const [user, setUser] = useState(null)
   const [editingId, setEditingId] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: '',
+    target_date: '',
+    status: 'Not Started',
+    progress: 0,
+    why_it_matters: '',
+  })
 
   useEffect(() => {
-    async function getUser() {
-      const { data } = await supabase.auth.getUser()
-      setUser(data.user)
-
-      if (data.user) {
-        loadGoals(data.user.id)
-      }
-    }
-
     getUser()
   }, [])
 
-  async function loadGoals(userId) {
+  useEffect(() => {
+    if (user) {
+      fetchGoals()
+    }
+  }, [user])
+
+  async function getUser() {
+    const { data } = await supabase.auth.getUser()
+    setUser(data?.user || null)
+  }
+
+  async function fetchGoals() {
+    setLoading(true)
+
     const { data, error } = await supabase
       .from('manifestation_goals')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error(error)
-      return
+      console.error('Error fetching goals:', error)
+    } else {
+      setGoals(data || [])
     }
 
-    setGoals(data)
+    setLoading(false)
+  }
+
+  function handleChange(event) {
+    const { name, value } = event.target
+
+    setFormData((currentData) => ({
+      ...currentData,
+      [name]: name === 'progress' ? Number(value) : value,
+    }))
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
-    if (!user) {
-      alert('Please log in first.')
-      return
+    if (!user) return
+
+    const goalData = {
+      ...formData,
+      user_id: user.id,
     }
 
     if (editingId) {
       const { error } = await supabase
         .from('manifestation_goals')
-        .update({
-          title,
-          description,
-          category,
-          target_date: targetDate,
-          status,
-          progress: Number(progress),
-          why_it_matters: whyItMatters,
-        })
+        .update(goalData)
         .eq('id', editingId)
         .eq('user_id', user.id)
 
       if (error) {
-        console.error(error)
-        return
+        console.error('Error updating goal:', error)
       }
     } else {
       const { error } = await supabase
         .from('manifestation_goals')
-        .insert({
-          user_id: user.id,
-          title,
-          description,
-          category,
-          target_date: targetDate,
-          status,
-          progress: Number(progress),
-          why_it_matters: whyItMatters,
-        })
+        .insert([goalData])
 
       if (error) {
-        console.error(error)
-        return
+        console.error('Error adding goal:', error)
       }
     }
 
-    clearForm()
-    loadGoals(user.id)
+    resetForm()
+    fetchGoals()
+  }
+
+  function handleEdit(goal) {
+    setEditingId(goal.id)
+
+    setFormData({
+      title: goal.title || '',
+      description: goal.description || '',
+      category: goal.category || '',
+      target_date: goal.target_date || '',
+      status: goal.status || 'Not Started',
+      progress: goal.progress || 0,
+      why_it_matters: goal.why_it_matters || '',
+    })
   }
 
   async function handleDelete(id) {
@@ -104,160 +117,198 @@ function Goals() {
       .eq('user_id', user.id)
 
     if (error) {
-      console.error(error)
-      return
+      console.error('Error deleting goal:', error)
+    } else {
+      fetchGoals()
     }
-
-    loadGoals(user.id)
   }
 
-  function handleEdit(goal) {
-    setEditingId(goal.id)
-    setTitle(goal.title || '')
-    setDescription(goal.description || '')
-    setCategory(goal.category || '')
-    setTargetDate(goal.target_date || '')
-    setStatus(goal.status || 'In Progress')
-    setProgress(goal.progress || 0)
-    setWhyItMatters(goal.why_it_matters || '')
-  }
-
-  function clearForm() {
+  function resetForm() {
     setEditingId(null)
-    setTitle('')
-    setDescription('')
-    setCategory('')
-    setTargetDate('')
-    setStatus('In Progress')
-    setProgress(0)
-    setWhyItMatters('')
+
+    setFormData({
+      title: '',
+      description: '',
+      category: '',
+      target_date: '',
+      status: 'Not Started',
+      progress: 0,
+      why_it_matters: '',
+    })
   }
 
   if (!user) {
-    return <p>Please log in to use manifestation goals.</p>
+    return (
+      <section>
+        <p className="page-kicker">Manifestation Goals</p>
+        <h1>Sign in to plan your next becoming.</h1>
+        <p className="page-intro">
+          Your goals are personal. Log in first so your manifestation map stays connected to your account.
+        </p>
+      </section>
+    )
   }
 
   return (
     <section>
-      <h1>Manifestation Goals</h1>
+      <p className="page-kicker">Manifestation Goals</p>
+      <h1>Goals with roots, receipts, and momentum 🎯</h1>
+      <p className="page-intro">
+        Name the thing, give it a reason, track the progress, and keep the goal connected to the life you are actually building.
+      </p>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Title</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+      <form className="feature-form" onSubmit={handleSubmit}>
+        <div className="form-header">
+          <h2>{editingId ? 'Update This Goal' : 'Create a New Goal'}</h2>
+          <span className="form-sparkle">✦</span>
+        </div>
+
+        <div className="form-row">
+          <div>
+            <label htmlFor="title">Goal Title</label>
+            <input
+              id="title"
+              name="title"
+              type="text"
+              value={formData.title}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="category">Category</label>
+            <input
+              id="category"
+              name="category"
+              type="text"
+              value={formData.category}
+              onChange={handleChange}
+              placeholder="Money, wellness, home, creativity..."
+            />
+          </div>
         </div>
 
         <div>
-          <label>Description</label>
+          <label htmlFor="description">Goal Description</label>
           <textarea
+            id="description"
+            name="description"
             rows="4"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={formData.description}
+            onChange={handleChange}
           />
         </div>
 
         <div>
-          <label>Category</label>
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+          <label htmlFor="why_it_matters">Why This Matters</label>
+          <textarea
+            id="why_it_matters"
+            name="why_it_matters"
+            rows="3"
+            value={formData.why_it_matters}
+            onChange={handleChange}
           />
         </div>
 
-        <div>
-          <label>Target Date</label>
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-          />
+        <div className="form-row">
+          <div>
+            <label htmlFor="target_date">Target Date</label>
+            <input
+              id="target_date"
+              name="target_date"
+              type="date"
+              value={formData.target_date}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="status">Status</label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+            >
+              <option>Not Started</option>
+              <option>In Progress</option>
+              <option>Paused</option>
+              <option>Completed</option>
+            </select>
+          </div>
         </div>
 
         <div>
-          <label>Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option>In Progress</option>
-            <option>Completed</option>
-            <option>On Hold</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Progress %</label>
+          <label htmlFor="progress">Progress: {formData.progress}%</label>
           <input
-            type="number"
+            id="progress"
+            name="progress"
+            type="range"
             min="0"
             max="100"
-            value={progress}
-            onChange={(e) => setProgress(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label>Why It Matters</label>
-          <textarea
-            rows="3"
-            value={whyItMatters}
-            onChange={(e) => setWhyItMatters(e.target.value)}
+            value={formData.progress}
+            onChange={handleChange}
           />
         </div>
 
         <button type="submit">
-          {editingId ? 'Update Goal' : 'Save Goal'}
+          {editingId ? 'Save Goal Update' : 'Add Goal'}
         </button>
+
+        {editingId && (
+          <button type="button" onClick={resetForm}>
+            Cancel Edit
+          </button>
+        )}
       </form>
 
-      <hr />
+      <div className="entries-section">
+        <div className="section-heading">
+          <h2>Your Goal Map</h2>
+          <span className="entry-count">{goals.length} goals</span>
+        </div>
 
-      <h2>Manifestation Goals</h2>
-
-      {goals.length === 0 ? (
-        <p>No goals yet</p>
-      ) : (
-        goals.map((goal) => (
-          <article key={goal.id}>
-            <h3>{goal.title}</h3>
-
-            <p>{goal.description}</p>
-
+        {loading ? (
+          <p>Loading your goals...</p>
+        ) : goals.length === 0 ? (
+          <article>
+            <h3>No goals yet</h3>
             <p>
-              <strong>Category:</strong> {goal.category}
+              Start with one goal that would make your life feel more honest, supported, or aligned.
             </p>
-
-            <p>
-              <strong>Status:</strong> {goal.status}
-            </p>
-
-            <p>
-              <strong>Progress:</strong> {goal.progress}%
-            </p>
-
-            <p>
-              <strong>Target Date:</strong> {goal.target_date}
-            </p>
-
-            <p>
-              <strong>Why It Matters:</strong> {goal.why_it_matters}
-            </p>
-
-            <button onClick={() => handleEdit(goal)}>
-              Edit
-            </button>
-
-            <button onClick={() => handleDelete(goal.id)}>
-              Delete
-            </button>
-
-            <hr />
           </article>
-        ))
-      )}
+        ) : (
+          <div className="entry-grid">
+            {goals.map((goal) => (
+              <article className="journal-entry-card" key={goal.id}>
+                <div className="entry-card-top">
+                  <h3>{goal.title}</h3>
+                  <span className="mood-badge">{goal.status}</span>
+                </div>
+
+                {goal.category && <p><strong>Category:</strong> {goal.category}</p>}
+                {goal.description && <p>{goal.description}</p>}
+                {goal.why_it_matters && <p><strong>Why it matters:</strong> {goal.why_it_matters}</p>}
+
+                <div className="entry-meta">
+                  <span>Progress: {goal.progress || 0}%</span>
+                  {goal.target_date && <span>Target: {goal.target_date}</span>}
+                </div>
+
+                <div className="entry-actions">
+                  <button type="button" onClick={() => handleEdit(goal)}>
+                    Edit
+                  </button>
+                  <button type="button" onClick={() => handleDelete(goal.id)}>
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   )
 }
