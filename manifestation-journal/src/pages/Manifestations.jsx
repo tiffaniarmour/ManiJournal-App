@@ -3,33 +3,30 @@ import { supabase } from '../services/supabase'
 
 function Manifestations() {
   const [user, setUser] = useState(null)
-  const [goals, setGoals] = useState([])
+  const [manifestations, setManifestations] = useState([])
 
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('')
-  const [targetDate, setTargetDate] = useState('')
-  const [status, setStatus] = useState('In Progress')
-  const [progress, setProgress] = useState(0)
-  const [whyItMatters, setWhyItMatters] = useState('')
+  const [desire, setDesire] = useState('')
+  const [evidence, setEvidence] = useState('')
+  const [manifested, setManifested] = useState(false)
   const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
     async function getUser() {
       const { data } = await supabase.auth.getUser()
+
       setUser(data.user)
 
       if (data.user) {
-        loadGoals(data.user.id)
+        loadManifestations(data.user.id)
       }
     }
 
     getUser()
   }, [])
 
-  async function loadGoals(userId) {
+  async function loadManifestations(userId) {
     const { data, error } = await supabase
-      .from('manifestation_goals')
+      .from('manifestations')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -39,28 +36,21 @@ function Manifestations() {
       return
     }
 
-    setGoals(data)
+    setManifestations(data)
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
-    if (!user) {
-      alert('Please log in first.')
-      return
-    }
+    if (!user) return
 
     if (editingId) {
       const { error } = await supabase
-        .from('manifestation_goals')
+        .from('manifestations')
         .update({
-          title,
-          description,
-          category,
-          target_date: targetDate,
-          status,
-          progress: Number(progress),
-          why_it_matters: whyItMatters,
+          desire,
+          evidence,
+          manifested,
         })
         .eq('id', editingId)
         .eq('user_id', user.id)
@@ -71,16 +61,12 @@ function Manifestations() {
       }
     } else {
       const { error } = await supabase
-        .from('manifestation_goals')
+        .from('manifestations')
         .insert({
           user_id: user.id,
-          title,
-          description,
-          category,
-          target_date: targetDate,
-          status,
-          progress: Number(progress),
-          why_it_matters: whyItMatters,
+          desire,
+          evidence,
+          manifested,
         })
 
       if (error) {
@@ -90,14 +76,14 @@ function Manifestations() {
     }
 
     clearForm()
-    loadGoals(user.id)
+    loadManifestations(user.id)
   }
 
   async function handleDelete(id) {
     if (!user) return
 
     const { error } = await supabase
-      .from('manifestation_goals')
+      .from('manifestations')
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)
@@ -107,121 +93,90 @@ function Manifestations() {
       return
     }
 
-    loadGoals(user.id)
+    loadManifestations(user.id)
   }
 
-  function handleEdit(goal) {
-    setEditingId(goal.id)
-    setTitle(goal.title || '')
-    setDescription(goal.description || '')
-    setCategory(goal.category || '')
-    setTargetDate(goal.target_date || '')
-    setStatus(goal.status || 'In Progress')
-    setProgress(goal.progress || 0)
-    setWhyItMatters(goal.why_it_matters || '')
+  function handleEdit(item) {
+    setEditingId(item.id)
+    setDesire(item.desire || '')
+    setEvidence(item.evidence || '')
+    setManifested(item.manifested || false)
   }
 
   function clearForm() {
     setEditingId(null)
-    setTitle('')
-    setDescription('')
-    setCategory('')
-    setTargetDate('')
-    setStatus('In Progress')
-    setProgress(0)
-    setWhyItMatters('')
+    setDesire('')
+    setEvidence('')
+    setManifested(false)
   }
 
   if (!user) {
-    return <p>Please log in to use manifestation goals.</p>
+    return <p>Please log in to track manifestations.</p>
   }
 
   return (
     <section>
-      <h1>Manifestation Goals</h1>
+      <h1>Manifestation Tracker</h1>
 
       <form onSubmit={handleSubmit}>
         <div>
-          <label>Title</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </div>
-
-        <div>
-          <label>Description</label>
-          <textarea
-            rows="4"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label>Category</label>
-          <input value={category} onChange={(e) => setCategory(e.target.value)} />
-        </div>
-
-        <div>
-          <label>Target Date</label>
+          <label>Desire</label>
           <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
+            value={desire}
+            onChange={(e) => setDesire(e.target.value)}
           />
         </div>
 
         <div>
-          <label>Status</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option>In Progress</option>
-            <option>Completed</option>
-            <option>On Hold</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Progress %</label>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={progress}
-            onChange={(e) => setProgress(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label>Why It Matters</label>
+          <label>Evidence</label>
           <textarea
-            rows="3"
-            value={whyItMatters}
-            onChange={(e) => setWhyItMatters(e.target.value)}
+            rows="5"
+            value={evidence}
+            onChange={(e) => setEvidence(e.target.value)}
           />
+        </div>
+
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              checked={manifested}
+              onChange={(e) => setManifested(e.target.checked)}
+            />
+            Manifested
+          </label>
         </div>
 
         <button type="submit">
-          {editingId ? 'Update Goal' : 'Save Goal'}
+          {editingId ? 'Update Manifestation' : 'Save Manifestation'}
         </button>
       </form>
 
       <hr />
 
-      <h2>Manifestation Goals</h2>
+      <h2>My Manifestations</h2>
 
-      {goals.length === 0 ? (
-        <p>No goals yet</p>
+      {manifestations.length === 0 ? (
+        <p>No manifestations yet.</p>
       ) : (
-        goals.map((goal) => (
-          <article key={goal.id}>
-            <h3>{goal.title}</h3>
-            <p>{goal.description}</p>
-            <p><strong>Category:</strong> {goal.category}</p>
-            <p><strong>Status:</strong> {goal.status}</p>
-            <p><strong>Progress:</strong> {goal.progress}%</p>
-            <p><strong>Target Date:</strong> {goal.target_date}</p>
-            <p><strong>Why It Matters:</strong> {goal.why_it_matters}</p>
+        manifestations.map((item) => (
+          <article key={item.id}>
+            <h3>{item.desire}</h3>
 
-            <button onClick={() => handleEdit(goal)}>Edit</button>
-            <button onClick={() => handleDelete(goal.id)}>Delete</button>
+            <p>
+              <strong>Status:</strong>{' '}
+              {item.manifested ? 'Manifested 🎉' : 'In Progress'}
+            </p>
+
+            <p>{item.evidence}</p>
+
+            <button onClick={() => handleEdit(item)}>
+              Edit
+            </button>
+
+            <button onClick={() => handleDelete(item.id)}>
+              Delete
+            </button>
 
             <hr />
           </article>
