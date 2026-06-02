@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../services/supabase'
 
 function JournalForm() {
+  const [user, setUser] = useState(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [mood, setMood] = useState('')
@@ -10,13 +11,23 @@ function JournalForm() {
   const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
-    loadEntries()
+    async function getUser() {
+      const { data } = await supabase.auth.getUser()
+      setUser(data.user)
+
+      if (data.user) {
+        loadEntries(data.user.id)
+      }
+    }
+
+    getUser()
   }, [])
 
-  async function loadEntries() {
+  async function loadEntries(userId) {
     const { data, error } = await supabase
       .from('journal_entries')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -30,6 +41,11 @@ function JournalForm() {
   async function handleSubmit(event) {
     event.preventDefault()
 
+    if (!user) {
+      alert('Please log in first.')
+      return
+    }
+
     if (editingId) {
       const { error } = await supabase
         .from('journal_entries')
@@ -40,6 +56,7 @@ function JournalForm() {
           energy: Number(energy),
         })
         .eq('id', editingId)
+        .eq('user_id', user.id)
 
       if (error) {
         console.log('Update error:', error)
@@ -51,6 +68,7 @@ function JournalForm() {
       const { error } = await supabase
         .from('journal_entries')
         .insert({
+          user_id: user.id,
           title,
           entry: content,
           mood,
@@ -67,7 +85,7 @@ function JournalForm() {
     setContent('')
     setMood('')
     setEnergy('5')
-    loadEntries()
+    loadEntries(user.id)
   }
 
   function handleEdit(entry) {
@@ -79,17 +97,24 @@ function JournalForm() {
   }
 
   async function handleDelete(id) {
+    if (!user) return
+
     const { error } = await supabase
       .from('journal_entries')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.log('Delete error:', error)
       return
     }
 
-    loadEntries()
+    loadEntries(user.id)
+  }
+
+  if (!user) {
+    return <p>Please log in to use your journal.</p>
   }
 
   return (

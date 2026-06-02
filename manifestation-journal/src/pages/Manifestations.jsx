@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../services/supabase'
 
 function Manifestations() {
+  const [user, setUser] = useState(null)
   const [goals, setGoals] = useState([])
 
   const [title, setTitle] = useState('')
@@ -11,17 +12,26 @@ function Manifestations() {
   const [status, setStatus] = useState('In Progress')
   const [progress, setProgress] = useState(0)
   const [whyItMatters, setWhyItMatters] = useState('')
-
   const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
-    loadGoals()
+    async function getUser() {
+      const { data } = await supabase.auth.getUser()
+      setUser(data.user)
+
+      if (data.user) {
+        loadGoals(data.user.id)
+      }
+    }
+
+    getUser()
   }, [])
 
-  async function loadGoals() {
+  async function loadGoals(userId) {
     const { data, error } = await supabase
       .from('manifestation_goals')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -35,6 +45,11 @@ function Manifestations() {
   async function handleSubmit(event) {
     event.preventDefault()
 
+    if (!user) {
+      alert('Please log in first.')
+      return
+    }
+
     if (editingId) {
       const { error } = await supabase
         .from('manifestation_goals')
@@ -44,10 +59,11 @@ function Manifestations() {
           category,
           target_date: targetDate,
           status,
-          progress,
+          progress: Number(progress),
           why_it_matters: whyItMatters,
         })
         .eq('id', editingId)
+        .eq('user_id', user.id)
 
       if (error) {
         console.error(error)
@@ -56,17 +72,16 @@ function Manifestations() {
     } else {
       const { error } = await supabase
         .from('manifestation_goals')
-        .insert([
-          {
-            title,
-            description,
-            category,
-            target_date: targetDate,
-            status,
-            progress,
-            why_it_matters: whyItMatters,
-          },
-        ])
+        .insert({
+          user_id: user.id,
+          title,
+          description,
+          category,
+          target_date: targetDate,
+          status,
+          progress: Number(progress),
+          why_it_matters: whyItMatters,
+        })
 
       if (error) {
         console.error(error)
@@ -75,21 +90,24 @@ function Manifestations() {
     }
 
     clearForm()
-    loadGoals()
+    loadGoals(user.id)
   }
 
   async function handleDelete(id) {
+    if (!user) return
+
     const { error } = await supabase
       .from('manifestation_goals')
       .delete()
       .eq('id', id)
+      .eq('user_id', user.id)
 
     if (error) {
       console.error(error)
       return
     }
 
-    loadGoals()
+    loadGoals(user.id)
   }
 
   function handleEdit(goal) {
@@ -114,6 +132,10 @@ function Manifestations() {
     setWhyItMatters('')
   }
 
+  if (!user) {
+    return <p>Please log in to use manifestation goals.</p>
+  }
+
   return (
     <section>
       <h1>Manifestation Goals</h1>
@@ -121,10 +143,7 @@ function Manifestations() {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Title</label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
 
         <div>
@@ -138,10 +157,7 @@ function Manifestations() {
 
         <div>
           <label>Category</label>
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
+          <input value={category} onChange={(e) => setCategory(e.target.value)} />
         </div>
 
         <div>
@@ -155,10 +171,7 @@ function Manifestations() {
 
         <div>
           <label>Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option>In Progress</option>
             <option>Completed</option>
             <option>On Hold</option>
@@ -200,37 +213,15 @@ function Manifestations() {
         goals.map((goal) => (
           <article key={goal.id}>
             <h3>{goal.title}</h3>
-
             <p>{goal.description}</p>
+            <p><strong>Category:</strong> {goal.category}</p>
+            <p><strong>Status:</strong> {goal.status}</p>
+            <p><strong>Progress:</strong> {goal.progress}%</p>
+            <p><strong>Target Date:</strong> {goal.target_date}</p>
+            <p><strong>Why It Matters:</strong> {goal.why_it_matters}</p>
 
-            <p>
-              <strong>Category:</strong> {goal.category}
-            </p>
-
-            <p>
-              <strong>Status:</strong> {goal.status}
-            </p>
-
-            <p>
-              <strong>Progress:</strong> {goal.progress}%
-            </p>
-
-            <p>
-              <strong>Target Date:</strong> {goal.target_date}
-            </p>
-
-            <p>
-              <strong>Why It Matters:</strong>{' '}
-              {goal.why_it_matters}
-            </p>
-
-            <button onClick={() => handleEdit(goal)}>
-              Edit
-            </button>
-
-            <button onClick={() => handleDelete(goal.id)}>
-              Delete
-            </button>
+            <button onClick={() => handleEdit(goal)}>Edit</button>
+            <button onClick={() => handleDelete(goal.id)}>Delete</button>
 
             <hr />
           </article>
