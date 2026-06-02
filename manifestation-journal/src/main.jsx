@@ -1,8 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-
 import './index.css'
+import './App.css'
 
 import App from './App'
 import Dashboard from './pages/Dashboard'
@@ -13,7 +13,9 @@ import Manifestations from './pages/Manifestations'
 import Wins from './pages/Wins'
 import FutureSelf from './pages/FutureSelf'
 import VisionBoard from './pages/VisionBoard'
+import Login from './pages/Login'
 import TestSupabase from './pages/TestSupabase'
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -27,7 +29,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="wins" element={<Wins />} />
           <Route path="future-self" element={<FutureSelf />} />
           <Route path="vision-board" element={<VisionBoard />} />
-          <Route path="/test" element={<TestSupabase />} />
+          <Route path="login" element={<Login />} />
+          <Route path="test" element={<TestSupabase />} />
         </Route>
       </Routes>
     </BrowserRouter>
