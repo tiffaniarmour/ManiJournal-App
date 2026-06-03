@@ -13,6 +13,7 @@ function Sidebar() {
           <li><NavLink to="/wins">🏆 Wins</NavLink></li>
           <li><NavLink to="/future-self">🌸 Future Self</NavLink></li>
           <li><NavLink to="/vision-board">🖼 Vision Board</NavLink></li>
+          <li><NavLink to="/learning-path">🌱 Learning Path</NavLink></li>
           <li><NavLink to="/login">🔐 Login</NavLink></li>
         </ul>
       </nav>

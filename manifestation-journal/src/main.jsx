@@ -13,6 +13,7 @@ import Manifestations from './pages/Manifestations'
 import Wins from './pages/Wins'
 import FutureSelf from './pages/FutureSelf'
 import VisionBoard from './pages/VisionBoard'
+import LearningPath from './pages/LearningPath'
 import Login from './pages/Login'
 import TestSupabase from './pages/TestSupabase'
 
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="wins" element={<Wins />} />
           <Route path="future-self" element={<FutureSelf />} />
           <Route path="vision-board" element={<VisionBoard />} />
+          <Route path="learning-path" element={<LearningPath />} />
           <Route path="login" element={<Login />} />
           <Route path="test" element={<TestSupabase />} />
         </Route>
