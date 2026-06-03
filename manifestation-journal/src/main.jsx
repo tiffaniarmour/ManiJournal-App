@@ -15,6 +15,8 @@ import FutureSelf from './pages/FutureSelf'
 import VisionBoard from './pages/VisionBoard'
 import LearningPath from './pages/LearningPath'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import TestSupabase from './pages/TestSupabase'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -32,6 +34,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="vision-board" element={<VisionBoard />} />
           <Route path="learning-path" element={<LearningPath />} />
           <Route path="login" element={<Login />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
           <Route path="test" element={<TestSupabase />} />
         </Route>
       </Routes>
