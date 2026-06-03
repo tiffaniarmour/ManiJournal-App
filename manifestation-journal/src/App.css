@@ -419,6 +419,79 @@ hr {
 }
 
 /* =========================
+   Dashboard Redesign
+========================= */
+
+.dashboard-feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.dashboard-feature-card {
+  min-height: 260px;
+}
+
+.dashboard-affirmation {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: var(--purple);
+  font-weight: 700;
+}
+
+.dashboard-list-item {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(125, 166, 194, 0.35);
+}
+
+.dashboard-list-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.dashboard-list-item h3 {
+  margin-bottom: 8px;
+}
+
+.dashboard-progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(125, 166, 194, 0.18);
+  margin-top: 10px;
+}
+
+.dashboard-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--fuchsia),
+    var(--orange)
+  );
+}
+
+.dashboard-vision-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dashboard-vision-preview img {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 2px solid var(--blue-light);
+  box-shadow: 0 8px 18px rgba(76, 49, 116, 0.12);
+}
+
+/* =========================
    Vision Board
 ========================= */
 
@@ -478,6 +551,7 @@ hr {
   }
 
   .dashboard-grid,
+  .dashboard-feature-grid,
   .form-row,
   .filter-card {
     grid-template-columns: 1fr;
@@ -491,5 +565,10 @@ hr {
 
   .vision-board-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-vision-preview img {
+    width: 100%;
+    height: 180px;
   }
 }
