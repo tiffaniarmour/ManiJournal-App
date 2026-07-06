@@ -1,189 +1,94 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../services/supabase'
+import { useMemo, useState } from 'react'
+import { affirmationBank } from '../data/affirmationBank.js'
 
 function Affirmations() {
-  const [user, setUser] = useState(null)
-  const [affirmations, setAffirmations] = useState([])
+  const [selectedAffirmation, setSelectedAffirmation] = useState(null)
+  const [selectedCategory, setSelectedCategory] = useState('All')
 
-  const [category, setCategory] = useState('')
-  const [text, setText] = useState('')
-  const [editingId, setEditingId] = useState(null)
+  const categories = useMemo(() => {
+    const categorySet = new Set()
 
-  useEffect(() => {
-    async function getUser() {
-      const { data } = await supabase.auth.getUser()
+    affirmationBank.forEach((affirmation) => {
+      categorySet.add(affirmation.category)
+    })
 
-      setUser(data.user)
-
-      if (data.user) {
-        loadAffirmations(data.user.id)
-      }
-    }
-
-    getUser()
+    return ['All', ...Array.from(categorySet).sort()]
   }, [])
 
-  async function loadAffirmations(userId) {
-    const { data, error } = await supabase
-      .from('affirmations')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error(error)
-      return
+  const filteredAffirmations = useMemo(() => {
+    if (selectedCategory === 'All') {
+      return affirmationBank
     }
 
-    setAffirmations(data)
-  }
+    return affirmationBank.filter(
+      (affirmation) => affirmation.category === selectedCategory
+    )
+  }, [selectedCategory])
 
-  async function handleSubmit(event) {
-    event.preventDefault()
+  function chooseRandomAffirmation() {
+    if (filteredAffirmations.length === 0) return
 
-    if (!user) return
+    const randomIndex = Math.floor(Math.random() * filteredAffirmations.length)
+    const randomAffirmation = filteredAffirmations[randomIndex]
 
-    if (editingId) {
-      const { error } = await supabase
-        .from('affirmations')
-        .update({
-          category,
-          text,
-        })
-        .eq('id', editingId)
-
-      if (error) {
-        console.error(error)
-        return
-      }
-    } else {
-      const { error } = await supabase
-        .from('affirmations')
-        .insert({
-          user_id: user.id,
-          category,
-          text,
-          favorite: false,
-        })
-
-      if (error) {
-        console.error(error)
-        return
-      }
-    }
-
-    setCategory('')
-    setText('')
-    setEditingId(null)
-
-    loadAffirmations(user.id)
-  }
-
-  async function handleDelete(id) {
-    const { error } = await supabase
-      .from('affirmations')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    loadAffirmations(user.id)
-  }
-
-  async function toggleFavorite(item) {
-    const { error } = await supabase
-      .from('affirmations')
-      .update({
-        favorite: !item.favorite,
-      })
-      .eq('id', item.id)
-
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    loadAffirmations(user.id)
-  }
-
-  function handleEdit(item) {
-    setEditingId(item.id)
-    setCategory(item.category)
-    setText(item.text)
-  }
-
-  if (!user) {
-    return <p>Please log in first.</p>
+    setSelectedAffirmation(randomAffirmation)
   }
 
   return (
     <section>
-      <h1>Affirmation Bank</h1>
-
-      <form onSubmit={handleSubmit}>
+      <div className="page-header">
         <div>
-          <label>Category</label>
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
+          <h1>Affirmation Library</h1>
+          <p>
+            Choose a category, then pull a random affirmation when you need a
+            mindset reset.
+          </p>
         </div>
+      </div>
 
-        <div>
-          <label>Affirmation</label>
-          <textarea
-            rows="4"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </div>
+      <div className="card">
+        <h2>Pull an Affirmation</h2>
 
-        <button type="submit">
-          {editingId ? 'Update' : 'Save'}
+        <label htmlFor="affirmation-category">Category</label>
+        <select
+          id="affirmation-category"
+          value={selectedCategory}
+          onChange={(event) => {
+            setSelectedCategory(event.target.value)
+            setSelectedAffirmation(null)
+          }}
+        >
+          {categories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+
+        <button type="button" onClick={chooseRandomAffirmation}>
+          Pull Random Affirmation
         </button>
-      </form>
+      </div>
 
-      <hr />
-
-      <h2>My Affirmations</h2>
-
-      {affirmations.map((item) => (
-        <article key={item.id}>
-          <p>
-            <strong>{item.category}</strong>
+      {selectedAffirmation ? (
+        <div className="card affirmation-pull-card">
+          <p className="affirmation-category">
+            {selectedAffirmation.category}
           </p>
 
-          <p>{item.text}</p>
+          <h2 className="affirmation-pull-text">
+            “{selectedAffirmation.text}”
+          </h2>
 
-          <p>
-            Favorite:{' '}
-            {item.favorite ? '⭐' : '☆'}
-          </p>
-
-          <button
-            onClick={() => toggleFavorite(item)}
-          >
-            Toggle Favorite
+          <button type="button" onClick={chooseRandomAffirmation}>
+            Pull Another
           </button>
-
-          <button
-            onClick={() => handleEdit(item)}
-          >
-            Edit
-          </button>
-
-          <button
-            onClick={() => handleDelete(item.id)}
-          >
-            Delete
-          </button>
-
-          <hr />
-        </article>
-      ))}
+        </div>
+      ) : (
+        <div className="card affirmation-empty-card">
+          <p>No affirmation pulled yet.</p>
+        </div>
+      )}
     </section>
   )
 }

@@ -1,26 +1,63 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../services/supabase'
 import DashboardCard from '../components/DashboardCard'
+import { affirmationBank } from '../data/affirmationBank.js'
+
+function getRandomAffirmation(currentAffirmation = null) {
+  if (affirmationBank.length === 0) return null
+
+  if (affirmationBank.length === 1) {
+    return affirmationBank[0]
+  }
+
+  let nextAffirmation = affirmationBank[
+    Math.floor(Math.random() * affirmationBank.length)
+  ]
+
+  let attempts = 0
+
+  while (
+    currentAffirmation &&
+    nextAffirmation.text === currentAffirmation.text &&
+    attempts < 10
+  ) {
+    nextAffirmation = affirmationBank[
+      Math.floor(Math.random() * affirmationBank.length)
+    ]
+
+    attempts += 1
+  }
+
+  return nextAffirmation
+}
 
 function Dashboard() {
   const [journalEntries, setJournalEntries] = useState([])
   const [goals, setGoals] = useState([])
   const [manifestations, setManifestations] = useState([])
-  const [affirmations, setAffirmations] = useState([])
   const [wins, setWins] = useState([])
   const [futureLetters, setFutureLetters] = useState([])
   const [visionItems, setVisionItems] = useState([])
   const [user, setUser] = useState(null)
-  const [dailyAffirmation, setDailyAffirmation] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [dailyAffirmation, setDailyAffirmation] = useState(() =>
+    getRandomAffirmation()
+  )
 
   useEffect(() => {
     loadDashboard()
   }, [])
 
   async function loadDashboard() {
+    setLoading(true)
+
     const { data } = await supabase.auth.getUser()
 
-    if (!data.user) return
+    if (!data.user) {
+      setUser(null)
+      setLoading(false)
+      return
+    }
 
     setUser(data.user)
 
@@ -40,12 +77,6 @@ function Dashboard() {
 
     const { data: manifestationData } = await supabase
       .from('manifestations')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-
-    const { data: affirmationData } = await supabase
-      .from('affirmations')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -71,22 +102,16 @@ function Dashboard() {
     setJournalEntries(entries || [])
     setGoals(manifestationGoals || [])
     setManifestations(manifestationData || [])
-    setAffirmations(affirmationData || [])
     setWins(winsData || [])
     setFutureLetters(lettersData || [])
     setVisionItems(visionData || [])
-
-    if (affirmationData && affirmationData.length > 0) {
-      const randomIndex = Math.floor(Math.random() * affirmationData.length)
-      setDailyAffirmation(affirmationData[randomIndex])
-    }
+    setLoading(false)
   }
 
   function chooseAnotherAffirmation() {
-    if (affirmations.length === 0) return
-
-    const randomIndex = Math.floor(Math.random() * affirmations.length)
-    setDailyAffirmation(affirmations[randomIndex])
+    setDailyAffirmation((currentAffirmation) =>
+      getRandomAffirmation(currentAffirmation)
+    )
   }
 
   function formatDate(dateValue) {
@@ -131,6 +156,15 @@ function Dashboard() {
     (letter) => !letter.opened
   )
 
+  if (loading) {
+    return (
+      <section>
+        <p className="page-kicker">Dashboard</p>
+        <h1>Loading your dashboard...</h1>
+      </section>
+    )
+  }
+
   if (!user) {
     return (
       <section>
@@ -174,13 +208,14 @@ function Dashboard() {
               <p className="dashboard-affirmation">
                 “{dailyAffirmation.text}”
               </p>
+
               <button type="button" onClick={chooseAnotherAffirmation}>
-                Show Another
+                Pull Another
               </button>
             </>
           ) : (
             <p>
-              Add affirmations to your Affirmation Bank so this space can pull one for your daily focus.
+              No affirmations are available yet.
             </p>
           )}
         </article>
@@ -223,7 +258,9 @@ function Dashboard() {
             recentWins.map((win) => (
               <div className="dashboard-list-item" key={win.id}>
                 <h3>{win.title}</h3>
-                {win.description && <p>{win.description}</p>}
+                {(win.description || win.notes) && (
+                  <p>{win.description || win.notes}</p>
+                )}
               </div>
             ))
           )}
