@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { affirmationBank } from '../data/affirmationBank.js'
+import { affirmationBank } from '../data/affirmationBank'
 
 function Affirmations() {
   const [selectedAffirmation, setSelectedAffirmation] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [pullCount, setPullCount] = useState(0)
 
   const categories = useMemo(() => {
     const categorySet = new Set()
@@ -28,67 +29,98 @@ function Affirmations() {
   function chooseRandomAffirmation() {
     if (filteredAffirmations.length === 0) return
 
-    const randomIndex = Math.floor(Math.random() * filteredAffirmations.length)
-    const randomAffirmation = filteredAffirmations[randomIndex]
+    if (filteredAffirmations.length === 1) {
+      setSelectedAffirmation(filteredAffirmations[0])
+      setPullCount((currentCount) => currentCount + 1)
+      return
+    }
+
+    let randomAffirmation =
+      filteredAffirmations[Math.floor(Math.random() * filteredAffirmations.length)]
+
+    let attempts = 0
+
+    while (
+      selectedAffirmation &&
+      randomAffirmation.text === selectedAffirmation.text &&
+      attempts < 10
+    ) {
+      randomAffirmation =
+        filteredAffirmations[Math.floor(Math.random() * filteredAffirmations.length)]
+
+      attempts += 1
+    }
 
     setSelectedAffirmation(randomAffirmation)
+    setPullCount((currentCount) => currentCount + 1)
   }
 
   return (
     <section>
-      <div className="page-header">
-        <div>
-          <h1>Affirmation Library</h1>
-          <p>
-            Choose a category, then pull a random affirmation when you need a
-            mindset reset.
-          </p>
-        </div>
-      </div>
+      <p className="page-kicker">Affirmation Library</p>
+      <h1>Pull what your mind needs today 💎</h1>
+      <p className="page-intro">
+        Choose a focus area, then pull a random affirmation from the hidden bank.
+        The full list stays tucked away so the message can meet you fresh.
+      </p>
 
-      <div className="card">
-        <h2>Pull an Affirmation</h2>
+      <div className="dashboard-feature-grid">
+        <article className="dashboard-feature-card">
+          <div className="entry-card-top">
+            <h2>🃏 Choose Your Focus</h2>
+          </div>
 
-        <label htmlFor="affirmation-category">Category</label>
-        <select
-          id="affirmation-category"
-          value={selectedCategory}
-          onChange={(event) => {
-            setSelectedCategory(event.target.value)
-            setSelectedAffirmation(null)
-          }}
-        >
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-
-        <button type="button" onClick={chooseRandomAffirmation}>
-          Pull Random Affirmation
-        </button>
-      </div>
-
-      {selectedAffirmation ? (
-        <div className="card affirmation-pull-card">
-          <p className="affirmation-category">
-            {selectedAffirmation.category}
-          </p>
-
-          <h2 className="affirmation-pull-text">
-            “{selectedAffirmation.text}”
-          </h2>
+          <label htmlFor="affirmation-category">Category</label>
+          <select
+            id="affirmation-category"
+            value={selectedCategory}
+            onChange={(event) => {
+              setSelectedCategory(event.target.value)
+              setSelectedAffirmation(null)
+              setPullCount(0)
+            }}
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
 
           <button type="button" onClick={chooseRandomAffirmation}>
-            Pull Another
+            {selectedAffirmation ? 'Pull Another' : 'Pull Affirmation'}
           </button>
-        </div>
-      ) : (
-        <div className="card affirmation-empty-card">
-          <p>No affirmation pulled yet.</p>
-        </div>
-      )}
+
+          <p className="page-intro">
+            Current focus: <strong>{selectedCategory}</strong>
+          </p>
+        </article>
+
+        <article className="dashboard-feature-card">
+          <div className="entry-card-top">
+            <h2>✨ Your Pull</h2>
+            <span className="mood-badge">
+              {selectedAffirmation?.category || 'Waiting'}
+            </span>
+          </div>
+
+          {selectedAffirmation ? (
+            <>
+              <p className="dashboard-affirmation">
+                “{selectedAffirmation.text}”
+              </p>
+
+              <p className="page-intro">
+                Pull count this session: {pullCount}
+              </p>
+            </>
+          ) : (
+            <p>
+              No affirmation pulled yet. Choose a category and pull when you are ready.
+            </p>
+          )}
+        </article>
+      </div>
     </section>
   )
 }
